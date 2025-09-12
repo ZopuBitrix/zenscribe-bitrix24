@@ -4,6 +4,11 @@
  * Interface para configurar credenciais e opções
  */
 
+// Inicializar sessão
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once(__DIR__ . '/crest.php');
 require_once(__DIR__ . '/settings.php');
 

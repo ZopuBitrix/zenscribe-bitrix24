@@ -4,11 +4,6 @@
  * Configurações do app local Bitrix24
  */
 
-// Inicializar sessão se ainda não foi iniciada
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Configurações da aplicação (preencher ao criar app no Bitrix24)
 define('ZENSCRIBE_CLIENT_ID', 'local.673d4c5d12345.67890123');  // App ID do Bitrix24
 define('ZENSCRIBE_CLIENT_SECRET', 'AbCdEfGhIjKlMnOpQrStUvWxYz1234567890'); // App Secret
@@ -42,46 +37,46 @@ define('MAX_TRANSCRIPT_SIZE', 100000); // 100KB
  * Obtém configuração específica do usuário/portal
  */
 function getZenScribeConfig($key = null) {
-    // Verificar se existe na sessão
-    if (isset($_SESSION['zenscribe_config'])) {
-        $config = $_SESSION['zenscribe_config'];
-        return $key ? $config[$key] ?? null : $config;
+    $configFile = __DIR__ . '/user_config.json';
+    
+    if (!file_exists($configFile)) {
+        $defaultConfig = [
+            'google' => [
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect_uri' => GOOGLE_REDIRECT_URI
+            ],
+            'openai' => [
+                'api_key' => '',
+                'model' => OPENAI_MODEL,
+                'enabled' => false
+            ],
+            'processing' => [
+                'auto_scheduling' => true,
+                'auto_contact_creation' => true,
+                'default_entity' => 'lead'
+            ],
+            'bitrix' => [
+                'default_responsible_id' => 1,
+                'activity_type' => 'ZENSCRIBE_MEETING'
+            ]
+        ];
+        
+        file_put_contents($configFile, json_encode($defaultConfig, JSON_PRETTY_PRINT));
+        return $key ? $defaultConfig[$key] ?? null : $defaultConfig;
     }
     
-    // Configuração padrão se não existir
-    $defaultConfig = [
-        'google' => [
-            'client_id' => '',
-            'client_secret' => '',
-            'redirect_uri' => GOOGLE_REDIRECT_URI
-        ],
-        'openai' => [
-            'api_key' => '',
-            'model' => OPENAI_MODEL,
-            'enabled' => false
-        ],
-        'processing' => [
-            'auto_scheduling' => true,
-            'auto_contact_creation' => true,
-            'default_entity' => 'lead'
-        ],
-        'bitrix' => [
-            'default_responsible_id' => 1,
-            'activity_type' => 'ZENSCRIBE_MEETING'
-        ]
-    ];
-    
-    return $key ? $defaultConfig[$key] ?? null : $defaultConfig;
+    $config = json_decode(file_get_contents($configFile), true);
+    return $key ? $config[$key] ?? null : $config;
 }
 
 /**
  * Salva configuração específica
  */
 function saveZenScribeConfig($config) {
-    // Usar sessão ao invés de arquivo devido às limitações do Railway
-    $_SESSION['zenscribe_config'] = $config;
-    return true;
-}}
+    $configFile = __DIR__ . '/user_config.json';
+    return file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT)) !== false;
+}
 
 /**
  * Log helper

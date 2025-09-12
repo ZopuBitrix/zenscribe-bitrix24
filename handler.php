@@ -4,6 +4,11 @@
  * Processa reuniões e atualiza Bitrix24
  */
 
+// Inicializar sessão
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once(__DIR__ . '/crest.php');
 require_once(__DIR__ . '/settings.php');
 
@@ -508,21 +513,44 @@ function scheduleNextMeeting($transcript, $meeting, $extractedData) {
 }
 
 /**
- * Testa autenticação Google
+ * Testa autenticação Google (simplificado como Avoma)
  */
 function testGoogleAuth() {
     $config = getZenScribeConfig();
     
-    if (empty($config['google']['client_id'])) {
-        zenError('Google Client ID não configurado');
+    if (empty($config['google']['client_id']) || empty($config['google']['client_secret'])) {
+        zenError('Google Client ID ou Secret não configurado');
         return;
     }
     
-    zenSuccess(['google_configured' => true], 'Google OAuth configurado');
+    // Teste simples de validação da API Key (similar à Avoma)
+    try {
+        // Apenas verificar se as credenciais tem formato válido
+        $clientId = $config['google']['client_id'];
+        $clientSecret = $config['google']['client_secret'];
+        
+        if (!preg_match('/^\d+-[a-zA-Z0-9]+\.apps\.googleusercontent\.com$/', $clientId)) {
+            zenError('Google Client ID com formato inválido');
+            return;
+        }
+        
+        if (strlen($clientSecret) < 10) {
+            zenError('Google Client Secret muito curto');
+            return;
+        }
+        
+        zenSuccess([
+            'google_configured' => true,
+            'client_id' => substr($clientId, 0, 20) . '...'
+        ], 'Google OAuth configurado e validado');
+        
+    } catch (Exception $e) {
+        zenError('Erro ao validar Google: ' . $e->getMessage());
+    }
 }
 
 /**
- * Testa OpenAI
+ * Testa OpenAI (simplificado como Avoma)
  */
 function testOpenAI() {
     $config = getZenScribeConfig();
@@ -532,22 +560,52 @@ function testOpenAI() {
         return;
     }
     
-    // Teste simples
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://api.openai.com/v1/models');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $config['openai']['api_key']
-    ]);
+    $apiKey = $config['openai']['api_key'];
     
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // Validação de formato (como Avoma faz)
+    if (!preg_match('/^sk-proj-[a-zA-Z0-9\-_]{20,}$/', $apiKey) && !preg_match('/^sk-[a-zA-Z0-9]{20,}$/', $apiKey)) {
+        zenError('OpenAI API Key com formato inválido');
+        return;
+    }
     
-    if ($httpCode === 200) {
-        zenSuccess(['openai_working' => true], 'OpenAI API funcionando');
-    } else {
-        zenError('OpenAI API não acessível', ['http_code' => $httpCode]);
+    // Teste real da API (direto como Avoma)
+    try {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://api.openai.com/v1/models');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            zenError('Erro de conexão OpenAI: ' . $error);
+            return;
+        }
+        
+        if ($httpCode === 200) {
+            $data = json_decode($response, true);
+            $models = $data['data'] ?? [];
+            
+            zenSuccess([
+                'openai_working' => true,
+                'models_count' => count($models),
+                'api_key_prefix' => substr($apiKey, 0, 10) . '...'
+            ], 'OpenAI API funcionando perfeitamente');
+        } else {
+            $errorData = json_decode($response, true);
+            $errorMsg = $errorData['error']['message'] ?? 'Erro desconhecido';
+            zenError('OpenAI API falhou: ' . $errorMsg, ['http_code' => $httpCode]);
+        }
+        
+    } catch (Exception $e) {
+        zenError('Erro ao testar OpenAI: ' . $e->getMessage());
     }
 }
 ?>
