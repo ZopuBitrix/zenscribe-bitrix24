@@ -1,0 +1,21 @@
+{
+    "google": {
+        "client_id": "",
+        "client_secret": "",
+        "redirect_uri": "https:\/\/chromiumapp.org\/"
+    },
+    "openai": {
+        "api_key": "",
+        "model": "gpt-4o-mini",
+        "enabled": false
+    },
+    "processing": {
+        "auto_scheduling": true,
+        "auto_contact_creation": true,
+        "default_entity": "lead"
+    },
+    "bitrix": {
+        "default_responsible_id": 1,
+        "activity_type": "ZENSCRIBE_MEETING"
+    }
+}
