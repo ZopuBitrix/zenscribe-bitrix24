@@ -81,7 +81,7 @@ function saveZenScribeConfig($config) {
     // Usar sessão ao invés de arquivo devido às limitações do Railway
     $_SESSION['zenscribe_config'] = $config;
     return true;
-}}
+}
 
 /**
  * Log helper
