@@ -75,8 +75,8 @@ function getZenScribeConfig($key = null) {
  */
 function saveZenScribeConfig($config) {
     $configFile = __DIR__ . '/user_config.json';
-    return file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT)) !== false;
-}
+    // Configuração temporária para Railway - permissão de escrita limitada
+    $_SESSION["zenscribe_config"] = $config; return true;}
 
 /**
  * Log helper
