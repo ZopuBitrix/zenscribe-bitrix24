@@ -95,8 +95,8 @@
                     <ul>
                         <li><strong>Nome:</strong> ZenScribe</li>
                         <li><strong>Código:</strong> zenscribe</li>
-                        <li><strong>Caminho handler:</strong> <code>http://localhost:8000/index.php</code></li>
-                        <li><strong>Caminho instalação:</strong> <code>http://localhost:8000/install-simple.php</code></li>
+                        <li><strong>Caminho handler:</strong> <code>https://zenscribe-bitrix24-production.up.railway.app/index.php</code></li>
+                        <li><strong>Caminho instalação:</strong> <code>https://zenscribe-bitrix24-production.up.railway.app/install.php</code></li>
                     </ul>
                 </li>
                 <li><strong>Permissões necessárias:</strong>
