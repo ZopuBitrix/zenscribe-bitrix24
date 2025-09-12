@@ -92,8 +92,8 @@
                 <li><strong>Crie App Local:</strong> Outros → Aplicação Local</li>
                 <li><strong>Configure as URLs:</strong>
                     <ul>
-                        <li><strong>Handler:</strong> <code>http://localhost:8000/index.php</code></li>
-                        <li><strong>Instalação:</strong> <code>http://localhost:8000/install.php</code></li>
+                        <li><strong>Handler:</strong> <code>https://zenscribe-bitrix24-production.up.railway.app/index.php</code></li>
+                        <li><strong>Instalação:</strong> <code>https://zenscribe-bitrix24-production.up.railway.app/install.php</code></li>
                     </ul>
                 </li>
                 <li><strong>Defina permissões:</strong> CRM, user, profile</li>
