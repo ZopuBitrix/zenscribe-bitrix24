@@ -222,7 +222,6 @@ if (isset($result['install']) && $result['install'] == true) {
 }
 ?>
 
-<?php else: ?>
     <!-- Rest only mode -->
     <?php 
     if (isset($result['install']) && $result['install'] == true) {
