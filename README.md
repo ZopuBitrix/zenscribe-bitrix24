@@ -289,3 +289,4 @@ MIT License - Uso livre para projetos comerciais e pessoais.
 
 **🎯 ZenScribe v2.0.0** - Transformando reuniões em insights acionáveis com IA.
 # Force rebuild
+# Ultra minimal
