@@ -8,10 +8,6 @@ require_once(__DIR__ . '/crest.php');
 require_once(__DIR__ . '/settings.php');
 
 // Verificar se app está instalado
-if (!file_exists(__DIR__ . '/settings.json')) {
-    header('Location: install.php');
-    exit;
-}
 
 // Carregar configurações do usuário
 $config = getZenScribeConfig();
