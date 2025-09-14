@@ -6,6 +6,9 @@
 
 define('C_REST_CLIENT_ID', 'local.68c38a4fdd55e8.90030602'); // Client ID do Bitrix24
 define('C_REST_CLIENT_SECRET', '4SJC7Xon7yY6xSF0WQCQAZKPBNp5JNNk8b720g7OrISVFE39zo'); // Client Secret do Bitrix24
+
+// Usar webhook para integração direta (mais simples que App Local)
+define('C_REST_WEB_HOOK_URL', 'https://zopu.bitrix24.com.br/rest/7/ch1ivgu881vzusdq/');
 define('C_REST_CURRENT_ENCODING', 'UTF-8');
 define('C_REST_IGNORE_SSL', true);
 define('C_REST_LOGS_DIR', __DIR__ . '/logs/');
