@@ -86,8 +86,22 @@ function processLatestMeeting() {
         $bitrixResult = updateBitrixEntity($entity, $extractedData, $meeting, $transcript);
         
         // 6. Adicionar comentários ricos (usa ID real do Lead criado)
-        $entity['id'] = $bitrixResult['record_id']; // Garantir ID real
-        $activityResult = createRichActivity($entity, $extractedData, $meeting, $transcript);
+        zenLog('Debug bitrixResult', 'debug', $bitrixResult);
+        
+        if (isset($bitrixResult['record_id'])) {
+            $entity['id'] = $bitrixResult['record_id'];
+            zenLog('Usando record_id do bitrixResult', 'info', ['entity_id' => $entity['id']]);
+        } else {
+            zenLog('record_id não encontrado, mantendo entity original', 'warning', ['entity' => $entity]);
+        }
+        
+        try {
+            $activityResult = createRichActivity($entity, $extractedData, $meeting, $transcript);
+            zenLog('createRichActivity sucesso', 'info', $activityResult);
+        } catch (Exception $e) {
+            zenLog('createRichActivity falhou', 'error', ['error' => $e->getMessage()]);
+            $activityResult = ['success' => false, 'error' => $e->getMessage()];
+        }
         
         // 7. Pular agendamento para otimização (evitar timeout)
         $schedulingResult = ['scheduled' => false, 'reason' => 'optimization_disabled'];
