@@ -1,0 +1,10 @@
+{
+    "access_token": "simulated_token_for_testing",
+    "refresh_token": "simulated_refresh_token", 
+    "domain": "zopu.bitrix24.com.br",
+    "user_id": 1,
+    "scope": "crm,user,calendar",
+    "client_id": "local.68c38a4fdd55e8.90030602",
+    "client_secret": "4SJC7Xon7yY6xSF0WQCQAZKPBNp5JNNk8b720g7OrISVFE39zo",
+    "installed_at": "2025-09-14 15:00:00"
+}
