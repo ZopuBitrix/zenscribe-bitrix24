@@ -482,12 +482,18 @@ function createRichActivity($entity, $extractedData, $meeting, $transcript) {
         $activity = [
             'OWNER_TYPE_ID' => $ownerTypeMap[$entity['type']] ?? 1,
             'OWNER_ID' => $entity['id'] ?? 1,
-            'TYPE_ID' => 6, // Task/Meeting type
+            'TYPE_ID' => 2, // Meeting type (2 é mais comum que 6)
             'SUBJECT' => '🎯 ZenScribe: ' . ($extractedData['TITLE'] ?? 'Reunião processada'),
             'DESCRIPTION' => $extractedData['COMMENTS'] ?? $transcript,
             'COMPLETED' => 'Y',
             'RESPONSIBLE_ID' => 1,
-            'PRIORITY' => ($extractedData['urgency'] === 'alta') ? '3' : '2'
+            'PRIORITY' => ($extractedData['urgency'] === 'alta') ? '3' : '2',
+            'COMMUNICATIONS' => [
+                [
+                    'TYPE' => 'OTHER',
+                    'VALUE' => 'Google Meet - ZenScribe'
+                ]
+            ]
         ];
         
         // Debug: Logar dados da atividade
