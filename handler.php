@@ -486,7 +486,7 @@ function createRichActivity($entity, $extractedData, $meeting, $transcript) {
             'SUBJECT' => '🎯 ZenScribe: ' . ($extractedData['TITLE'] ?? 'Reunião processada'),
             'DESCRIPTION' => $extractedData['COMMENTS'] ?? $transcript,
             'COMPLETED' => 'Y',
-            'RESPONSIBLE_ID' => 1,
+            'RESPONSIBLE_ID' => 7,
             'PRIORITY' => ($extractedData['urgency'] === 'alta') ? '3' : '2',
             'COMMUNICATIONS' => [
                 [

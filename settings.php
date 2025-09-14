@@ -78,8 +78,8 @@ function getZenScribeConfig($key = null) {
             'auto_contact_creation' => true,
             'default_entity' => 'lead'
         ],
-        'bitrix' => [
-            'default_responsible_id' => 1,
+                'bitrix' => [
+                    'default_responsible_id' => 7,
             'activity_type' => 'ZENSCRIBE_MEETING'
         ]
     ];
