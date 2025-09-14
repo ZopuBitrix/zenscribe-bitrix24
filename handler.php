@@ -490,10 +490,23 @@ function createRichActivity($entity, $extractedData, $meeting, $transcript) {
             'PRIORITY' => ($extractedData['urgency'] === 'alta') ? '3' : '2'
         ];
         
+        // Debug: Logar dados da atividade
+        zenLog('Tentando criar atividade', 'debug', [
+            'activity_fields' => $activity,
+            'entity' => $entity,
+            'extracted_data_keys' => array_keys($extractedData)
+        ]);
+        
         $result = CRest::call('crm.activity.add', ['fields' => $activity]);
         
+        // Debug: Logar resultado
+        zenLog('Resultado crm.activity.add', 'debug', $result);
+        
         if (isset($result['error'])) {
-            throw new Exception('Erro ao criar atividade: ' . $result['error_description']);
+            // Incluir mais detalhes no erro
+            $errorMsg = 'Erro ao criar atividade: ' . ($result['error_description'] ?? $result['error']);
+            $errorMsg .= ' | Fields: ' . json_encode($activity);
+            throw new Exception($errorMsg);
         }
         
         zenLog('Atividade rica criada', 'info', [
