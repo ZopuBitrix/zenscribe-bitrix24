@@ -468,65 +468,62 @@ function updateBitrixEntity($entity, $extractedData, $meeting, $transcript) {
 }
 
 /**
- * Cria atividade rica no Bitrix24
+ * Cria comentário rico no timeline do Bitrix24
  */
 function createRichActivity($entity, $extractedData, $meeting, $transcript) {
     try {
-        $ownerTypeMap = [
-            'lead' => 1,
-            'deal' => 2,
-            'contact' => 3,
-            'company' => 4
+        // Criar comentário no timeline ao invés de atividade
+        $commentText = '🎯 ZenScribe: ' . ($extractedData['TITLE'] ?? 'Reunião processada') . "\n\n";
+        $commentText .= $extractedData['COMMENTS'] ?? substr($transcript, 0, 500);
+        
+        // Adicionar dados estruturados se disponíveis
+        if (isset($extractedData['client_info'])) {
+            $commentText .= "\n\n📊 Dados extraídos:\n";
+            foreach ($extractedData['client_info'] as $key => $value) {
+                if (!empty($value)) {
+                    $commentText .= "• " . ucfirst($key) . ": " . $value . "\n";
+                }
+            }
+        }
+        
+        $commentText .= "\n🔗 Processado automaticamente pelo ZenScribe";
+        
+        $comment = [
+            'ENTITY_ID' => $entity['id'],
+            'ENTITY_TYPE' => $entity['type'],
+            'COMMENT' => $commentText
         ];
         
-        $activity = [
-            'OWNER_TYPE_ID' => $ownerTypeMap[$entity['type']] ?? 1,
-            'OWNER_ID' => $entity['id'] ?? 1,
-            'TYPE_ID' => 2, // Meeting type (2 é mais comum que 6)
-            'SUBJECT' => '🎯 ZenScribe: ' . ($extractedData['TITLE'] ?? 'Reunião processada'),
-            'DESCRIPTION' => $extractedData['COMMENTS'] ?? $transcript,
-            'COMPLETED' => 'Y',
-            'RESPONSIBLE_ID' => 7,
-            'PRIORITY' => ($extractedData['urgency'] === 'alta') ? '3' : '2',
-            'COMMUNICATIONS' => [
-                [
-                    'TYPE' => 'OTHER',
-                    'VALUE' => 'Google Meet - ZenScribe'
-                ]
-            ]
-        ];
-        
-        // Debug: Logar dados da atividade
-        zenLog('Tentando criar atividade', 'debug', [
-            'activity_fields' => $activity,
+        // Debug: Logar dados do comentário
+        zenLog('Tentando criar timeline comment', 'debug', [
+            'comment_fields' => $comment,
             'entity' => $entity,
             'extracted_data_keys' => array_keys($extractedData)
         ]);
         
-        $result = CRest::call('crm.activity.add', ['fields' => $activity]);
+        $result = CRest::call('crm.timeline.comment.add', $comment);
         
         // Debug: Logar resultado
-        zenLog('Resultado crm.activity.add', 'debug', $result);
+        zenLog('Resultado crm.timeline.comment.add', 'debug', $result);
         
         if (isset($result['error'])) {
-            // Incluir mais detalhes no erro
-            $errorMsg = 'Erro ao criar atividade: ' . ($result['error_description'] ?? $result['error']);
-            $errorMsg .= ' | Fields: ' . json_encode($activity);
+            $errorMsg = 'Erro ao criar comentário: ' . ($result['error_description'] ?? $result['error']);
+            $errorMsg .= ' | Fields: ' . json_encode($comment);
             throw new Exception($errorMsg);
         }
         
-        zenLog('Atividade rica criada', 'info', [
-            'activity_id' => $result['result'],
+        zenLog('Comentário timeline criado', 'info', [
+            'comment_id' => $result['result'],
             'entity' => $entity
         ]);
         
         return [
             'success' => true,
-            'activity_id' => $result['result']
+            'comment_id' => $result['result']
         ];
         
     } catch (Exception $e) {
-        zenLog('Erro ao criar atividade', 'error', ['error' => $e->getMessage()]);
+        zenLog('Erro ao criar comentário', 'error', ['error' => $e->getMessage()]);
         throw $e;
     }
 }
