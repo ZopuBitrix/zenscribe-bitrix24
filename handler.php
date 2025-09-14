@@ -392,14 +392,34 @@ function updateBitrixEntity($entity, $extractedData, $meeting, $transcript) {
         }
         
         if ($entity['id']) {
-            // Atualizar existente
-            $method = 'crm.' . $entity['type'] . '.update';
-            $params = [
-                'id' => $entity['id'],
-                'fields' => $fields
-            ];
+            // Verificar se a entidade realmente existe antes de tentar atualizar
+            $checkMethod = 'crm.' . $entity['type'] . '.get';
+            $checkResult = CRest::call($checkMethod, ['id' => $entity['id']]);
+            
+            if (isset($checkResult['error']) || empty($checkResult['result'])) {
+                // Entidade não existe, criar nova
+                zenLog('Entidade não existe, criando nova', 'info', [
+                    'entity_id' => $entity['id'],
+                    'entity_type' => $entity['type']
+                ]);
+                $method = 'crm.' . $entity['type'] . '.add';
+                $params = [
+                    'fields' => $fields
+                ];
+            } else {
+                // Entidade existe, atualizar
+                zenLog('Entidade existe, atualizando', 'info', [
+                    'entity_id' => $entity['id'],
+                    'entity_type' => $entity['type']
+                ]);
+                $method = 'crm.' . $entity['type'] . '.update';
+                $params = [
+                    'id' => $entity['id'],
+                    'fields' => $fields
+                ];
+            }
         } else {
-            // Criar novo
+            // Criar novo (ID não informado)
             $method = 'crm.' . $entity['type'] . '.add';
             $params = [
                 'fields' => $fields
