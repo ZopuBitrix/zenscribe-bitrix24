@@ -85,15 +85,12 @@ function processLatestMeeting() {
         // 5. Atualizar/criar no Bitrix24
         $bitrixResult = updateBitrixEntity($entity, $extractedData, $meeting, $transcript);
         
-        // 6. Criar atividade rica
+        // 6. Adicionar comentários ricos (usa ID real do Lead criado)
+        $entity['id'] = $bitrixResult['record_id']; // Garantir ID real
         $activityResult = createRichActivity($entity, $extractedData, $meeting, $transcript);
         
-        // 7. Auto-agendamento (se configurado)
-        $schedulingResult = null;
-        $config = getZenScribeConfig();
-        if ($config['processing']['auto_scheduling']) {
-            $schedulingResult = scheduleNextMeeting($transcript, $meeting, $extractedData);
-        }
+        // 7. Pular agendamento para otimização (evitar timeout)
+        $schedulingResult = ['scheduled' => false, 'reason' => 'optimization_disabled'];
         
         zenLog('Processamento concluído', 'info', [
             'entity' => $entity,
@@ -516,18 +513,14 @@ function createRichActivity($entity, $extractedData, $meeting, $transcript) {
             ]
         ];
         
-        // Debug: Logar dados da atualização
-        zenLog('Atualizando COMMENTS da entidade', 'debug', [
-            'method' => $updateMethod,
-            'entity' => $entity,
-            'new_comment_length' => strlen($newComment),
-            'total_comments_length' => strlen($finalComments)
+        // Log simplificado para performance
+        zenLog('Atualizando COMMENTS', 'info', [
+            'entity_type' => $entity['type'],
+            'entity_id' => $entity['id'],
+            'comment_size' => strlen($newComment)
         ]);
         
         $result = CRest::call($updateMethod, $updateParams);
-        
-        // Debug: Logar resultado
-        zenLog('Resultado update COMMENTS', 'debug', $result);
         
         if (isset($result['error'])) {
             $errorMsg = 'Erro ao atualizar comentários: ' . ($result['error_description'] ?? $result['error']);
