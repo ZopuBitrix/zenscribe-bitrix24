@@ -406,10 +406,24 @@ function updateBitrixEntity($entity, $extractedData, $meeting, $transcript) {
             ];
         }
         
+        // Debug: Logar chamada antes de executar
+        zenLog('Tentando chamada Bitrix24', 'debug', [
+            'method' => $method,
+            'params' => $params,
+            'entity' => $entity
+        ]);
+        
         $result = CRest::call($method, $params);
         
+        // Debug: Logar resultado
+        zenLog('Resultado chamada Bitrix24', 'debug', $result);
+        
         if (isset($result['error'])) {
-            throw new Exception('Erro Bitrix24: ' . $result['error_description']);
+            // Incluir mais detalhes no erro
+            $errorMsg = 'Erro Bitrix24: ' . ($result['error_description'] ?? $result['error']);
+            $errorMsg .= ' | Method: ' . $method;
+            $errorMsg .= ' | Params: ' . json_encode($params);
+            throw new Exception($errorMsg);
         }
         
         $recordId = $result['result'] ?? $entity['id'];
