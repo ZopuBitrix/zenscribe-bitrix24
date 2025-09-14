@@ -40,15 +40,28 @@ define('MAX_TRANSCRIPT_SIZE', 100000); // 100KB
 
 /**
  * Obtém configuração específica do usuário/portal
+ * Usa arquivo como Avoma, com fallback para sessão
  */
 function getZenScribeConfig($key = null) {
-    // Verificar se existe na sessão
+    $configFile = __DIR__ . '/zenscribe_config.json';
+    
+    // Primeiro: tentar ler do arquivo (como Avoma)
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        if ($config && is_array($config)) {
+            return $key ? $config[$key] ?? null : $config;
+        }
+    }
+    
+    // Segundo: fallback para sessão 
     if (isset($_SESSION['zenscribe_config'])) {
         $config = $_SESSION['zenscribe_config'];
+        // Salvar no arquivo para próximas chamadas
+        saveZenScribeConfig($config);
         return $key ? $config[$key] ?? null : $config;
     }
     
-    // Configuração padrão se não existir
+    // Terceiro: configuração padrão
     $defaultConfig = [
         'google' => [
             'client_id' => '',
@@ -76,9 +89,24 @@ function getZenScribeConfig($key = null) {
 
 /**
  * Salva configuração específica
+ * Usa arquivo como Avoma, com fallback para sessão
  */
 function saveZenScribeConfig($config) {
-    // Usar sessão ao invés de arquivo devido às limitações do Railway
+    $configFile = __DIR__ . '/zenscribe_config.json';
+    
+    // Tentar salvar no arquivo primeiro (como Avoma)
+    try {
+        $result = file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+        if ($result !== false) {
+            // Também salvar na sessão como backup
+            $_SESSION['zenscribe_config'] = $config;
+            return true;
+        }
+    } catch (Exception $e) {
+        zenLog('Erro ao salvar config em arquivo: ' . $e->getMessage(), 'warning');
+    }
+    
+    // Fallback: salvar apenas na sessão
     $_SESSION['zenscribe_config'] = $config;
     return true;
 }
