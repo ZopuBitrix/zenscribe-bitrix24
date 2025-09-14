@@ -73,7 +73,8 @@ function processLatestMeeting() {
         // 3. Detectar entidade Bitrix24
         $entity = detectBitrixEntity($meeting['description']);
         if (!$entity) {
-            $entity = ['type' => 'lead', 'id' => null]; // Padrão: criar novo lead
+            // Padrão: criar novo lead sempre (sem ID específico)
+            $entity = ['type' => 'lead', 'id' => null];
         }
         
         zenLog('Entidade detectada', 'info', $entity);
@@ -128,7 +129,7 @@ function getLatestGoogleMeeting() {
     $mockMeeting = [
         'id' => 'mock-meeting-' . time(),
         'title' => 'Reunião Comercial - Teste ZenScribe',
-        'description' => 'Discussão sobre proposta. Link: https://zopu.bitrix24.com.br/crm/lead/details/67560/',
+        'description' => 'Discussão sobre proposta de e-commerce e gestão de estoque.',
         'start' => date('Y-m-d H:i:s', strtotime('-2 hours')),
         'end' => date('Y-m-d H:i:s', strtotime('-1 hour')),
         'attendees' => ['contato@cliente.com', 'vendedor@empresa.com']
