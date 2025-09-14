@@ -49,6 +49,15 @@ class CRest
     
     public static function call($method, $params = [])
     {
+        // Se webhook está definido, usar webhook direto (como Avoma)
+        if (defined('C_REST_WEB_HOOK_URL') && !empty(C_REST_WEB_HOOK_URL)) {
+            $url = C_REST_WEB_HOOK_URL . $method . '.json';
+            $result = static::request($url, $params);
+            static::writeToLog(['method' => $method, 'params' => $params, 'result' => $result], 'webhook_call');
+            return $result;
+        }
+        
+        // Senão usar OAuth tradicional
         if (!static::checkSettings()) {
             $result = [
                 'error' => 'settings_error',
@@ -73,7 +82,7 @@ class CRest
             }
         }
         
-        static::writeToLog(['method' => $method, 'params' => $params, 'result' => $result], 'call');
+        static::writeToLog(['method' => $method, 'params' => $params, 'result' => $result], 'oauth_call');
         
         return $result;
     }
