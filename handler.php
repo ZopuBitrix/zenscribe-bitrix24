@@ -484,72 +484,59 @@ function updateBitrixEntity($entity, $extractedData, $meeting, $transcript) {
  */
 function createRichActivity($entity, $extractedData, $meeting, $transcript) {
     try {
-        // Construir comentário rico
-        $newComment = "\n\n" . str_repeat("=", 50) . "\n";
-        $newComment .= "🎯 ZenScribe: " . ($extractedData['TITLE'] ?? 'Reunião processada') . "\n";
-        $newComment .= "📅 " . date('d/m/Y H:i:s') . "\n";
-        $newComment .= str_repeat("-", 50) . "\n\n";
+        // Construir comentário rico para timeline
+        $timelineComment = "🎯 ZenScribe: " . ($extractedData['TITLE'] ?? 'Reunião processada') . "\n";
+        $timelineComment .= "📅 " . date('d/m/Y H:i:s') . "\n";
+        $timelineComment .= str_repeat("-", 50) . "\n\n";
         
         // Adicionar resumo
-        $newComment .= $extractedData['COMMENTS'] ?? substr($transcript, 0, 500);
+        $timelineComment .= $extractedData['COMMENTS'] ?? substr($transcript, 0, 500);
         
         // Adicionar dados estruturados se disponíveis
         if (isset($extractedData['client_info'])) {
-            $newComment .= "\n\n📊 DADOS EXTRAÍDOS:\n";
+            $timelineComment .= "\n\n📊 DADOS EXTRAÍDOS:\n";
             foreach ($extractedData['client_info'] as $key => $value) {
                 if (!empty($value)) {
-                    $newComment .= "• " . strtoupper($key) . ": " . $value . "\n";
+                    $timelineComment .= "• " . strtoupper($key) . ": " . $value . "\n";
                 }
             }
         }
         
-        $newComment .= "\n🔗 Processado automaticamente pelo ZenScribe\n";
-        $newComment .= str_repeat("=", 50);
+        $timelineComment .= "\n🔗 Processado automaticamente pelo ZenScribe";
         
-        // Obter comentários existentes
-        $method = 'crm.' . $entity['type'] . '.get';
-        $currentEntity = CRest::call($method, ['id' => $entity['id']]);
-        
-        $existingComments = '';
-        if (isset($currentEntity['result']['COMMENTS'])) {
-            $existingComments = $currentEntity['result']['COMMENTS'];
-        }
-        
-        // Combinar comentários existentes com novo
-        $finalComments = $existingComments . $newComment;
-        
-        // Atualizar entidade com comentários expandidos
-        $updateMethod = 'crm.' . $entity['type'] . '.update';
-        $updateParams = [
-            'id' => $entity['id'],
-            'fields' => [
-                'COMMENTS' => $finalComments
-            ]
+        // Usar crm.timeline.comment.add ao invés de tentar atualizar COMMENTS
+        $commentParams = [
+            'ENTITY_ID' => $entity['id'],
+            'ENTITY_TYPE' => $entity['type'], // 'lead', 'deal', etc.
+            'COMMENT' => $timelineComment
         ];
         
-        // Log simplificado para performance
-        zenLog('Atualizando COMMENTS', 'info', [
+        zenLog('Adicionando comentário no timeline', 'info', [
             'entity_type' => $entity['type'],
             'entity_id' => $entity['id'],
-            'comment_size' => strlen($newComment)
+            'comment_size' => strlen($timelineComment)
         ]);
         
-        $result = CRest::call($updateMethod, $updateParams);
+        $result = CRest::call('crm.timeline.comment.add', $commentParams);
         
-        if (isset($result['error'])) {
-            $errorMsg = 'Erro ao atualizar comentários: ' . ($result['error_description'] ?? $result['error']);
-            throw new Exception($errorMsg);
+        if (!$result || isset($result['error'])) {
+            $error = isset($result['error']) ? $result['error']['error_description'] : 'Erro desconhecido';
+            zenLog('Erro ao adicionar timeline comment', 'error', ['error' => $error, 'params' => $commentParams]);
+            throw new Exception('Erro Timeline: ' . $error);
         }
         
-        zenLog('Comentários da entidade atualizados', 'info', [
-            'entity' => $entity,
-            'comment_added' => strlen($newComment) . ' caracteres'
+        $commentId = $result['result'];
+        zenLog('Timeline comment adicionado com sucesso', 'success', [
+            'entity_id' => $entity['id'],
+            'entity_type' => $entity['type'],
+            'comment_id' => $commentId
         ]);
         
         return [
             'success' => true,
-            'method' => 'comments_update',
-            'entity_id' => $entity['id']
+            'entity_id' => $entity['id'],
+            'comment_id' => $commentId,
+            'timeline_comment_added' => true
         ];
         
     } catch (Exception $e) {
